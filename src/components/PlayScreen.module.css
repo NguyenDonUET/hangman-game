@@ -205,7 +205,8 @@
 
   .health {
     margin-left: auto;
-    width: min(210px, 68vw);
+    flex: 0 1 210px;
+    min-width: 0;
   }
 }
 

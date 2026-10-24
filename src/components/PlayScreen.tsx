@@ -1,5 +1,7 @@
 import heart from "../assets/images/icon-heart.svg";
 import menuIcon from "../assets/images/icon-menu.svg";
+import soundOffIcon from "../assets/images/icon-sound-off.svg";
+import soundOnIcon from "../assets/images/icon-sound-on.svg";
 import { KEY_ROWS } from "../game/alphabet";
 import { longestWordLength, speakPuzzle, tokenize } from "../game/phrase";
 import type { CategoryName, Overlay } from "../game/types";
@@ -17,6 +19,8 @@ type PlayScreenProps = {
   overlay: Overlay;
   note: string | null;
   round: number;
+  muted: boolean;
+  onToggleMuted: () => void;
   onPause: () => void;
   onGuess: (letter: string) => void;
 };
@@ -29,6 +33,8 @@ export function PlayScreen({
   overlay,
   note,
   round,
+  muted,
+  onToggleMuted,
   onPause,
   onGuess,
 }: PlayScreenProps) {
@@ -48,6 +54,12 @@ export function PlayScreen({
           aria-haspopup="dialog"
           aria-expanded={overlay === "paused"}
           disabled={overlay !== null}
+        />
+        <IconButton
+          label="Mute sound"
+          icon={muted ? soundOffIcon : soundOnIcon}
+          onClick={onToggleMuted}
+          aria-pressed={muted}
         />
         <h1 ref={headingRef} tabIndex={-1} className={styles.title}>
           {category}

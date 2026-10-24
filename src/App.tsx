@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from "react";
+import { useGameSounds, useMuted } from "./audio/useGameSounds";
 import { CategoryScreen } from "./components/CategoryScreen";
 import { GameDialog } from "./components/GameDialog";
 import { HowToScreen } from "./components/HowToScreen";
@@ -9,6 +10,8 @@ import { createInitialState, reducer } from "./game/reducer";
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
+  const [muted, toggleMuted] = useMuted();
+  useGameSounds(state, muted);
 
   useEffect(() => {
     if (state.screen !== "play" || state.overlay) return;
@@ -56,6 +59,8 @@ export default function App() {
             overlay={state.overlay}
             note={state.note}
             round={state.round}
+            muted={muted}
+            onToggleMuted={toggleMuted}
             onPause={() => dispatch({ type: "pause" })}
             onGuess={(letter) => dispatch({ type: "guess", letter })}
           />
