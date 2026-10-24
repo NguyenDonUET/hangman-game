@@ -1,0 +1,112 @@
+.page {
+  gap: clamp(28px, 5vh, 56px);
+  align-items: center;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  width: min(1120px, 100%);
+}
+
+.title {
+  grid-column: 2;
+  text-align: center;
+  font-size: clamp(40px, 6vw, 88px);
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+.header > :first-child {
+  grid-column: 1;
+}
+
+.balance {
+  grid-column: 3;
+  width: clamp(48px, 7vw, 86px);
+}
+
+.steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 3vw, 36px);
+  width: min(1120px, 100%);
+  padding: 0;
+}
+
+.card {
+  position: relative;
+  margin-top: 44px;
+  padding: 72px 28px 36px;
+  border-radius: 40px;
+  background: var(--blue);
+  box-shadow:
+    inset 0 -8px 0 var(--navy-deep),
+    inset 0 2px 0 var(--blue-lighter);
+  text-align: center;
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% -50%;
+  width: 88px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--pink), #7199ff);
+  box-shadow: inset 0 -5px 0 rgb(157 45 245 / 0.4);
+  font-size: 32px;
+}
+
+.card h2 {
+  font-size: clamp(28px, 3vw, 48px);
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.card p {
+  font-size: clamp(16px, 2vw, 26px);
+  line-height: 1.25;
+  letter-spacing: 0.6px;
+}
+
+@media (max-width: 900px) {
+  .steps {
+    grid-template-columns: 1fr;
+    max-width: 460px;
+  }
+
+  .card {
+    margin-top: 32px;
+    padding: 56px 20px 28px;
+    border-radius: 24px;
+  }
+
+  .badge {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    grid-template-columns: auto 1fr;
+  }
+
+  .title {
+    grid-column: 2;
+    text-align: left;
+    font-size: 40px;
+  }
+
+  .balance {
+    display: none;
+  }
+}
