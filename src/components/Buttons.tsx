@@ -1,20 +1,20 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ComponentPropsWithRef } from "react";
+import { classNames } from "./classNames";
 
 type IconButtonProps = {
   label: string;
   icon: string;
   size?: "nav" | "play";
-} & ButtonHTMLAttributes<HTMLButtonElement>;
+} & Omit<ComponentPropsWithRef<"button">, "type" | "aria-label" | "children">;
 
-export function IconButton({ label, icon, size = "nav", className, ...props }: IconButtonProps) {
+export function IconButton({ label, icon, size = "nav", className, ref, ...props }: IconButtonProps) {
   return (
     <button
-      type="button"
-      className={["icon-btn", size === "play" ? "icon-btn-play" : "icon-btn-nav", className]
-        .filter(Boolean)
-        .join(" ")}
-      aria-label={label}
       {...props}
+      ref={ref}
+      type="button"
+      className={classNames("icon-btn", size === "play" ? "icon-btn-play" : "icon-btn-nav", className)}
+      aria-label={label}
     >
       <img src={icon} alt="" />
     </button>
@@ -23,14 +23,15 @@ export function IconButton({ label, icon, size = "nav", className, ...props }: I
 
 type TextButtonProps = {
   variant?: "blue" | "pink";
-} & ButtonHTMLAttributes<HTMLButtonElement>;
+} & Omit<ComponentPropsWithRef<"button">, "type">;
 
-export function TextButton({ variant = "blue", className, ...props }: TextButtonProps) {
+export function TextButton({ variant = "blue", className, ref, ...props }: TextButtonProps) {
   return (
     <button
-      type="button"
-      className={["btn", variant === "pink" ? "btn-pink" : "", className].filter(Boolean).join(" ")}
       {...props}
+      ref={ref}
+      type="button"
+      className={classNames("btn", variant === "pink" && "btn-pink", className)}
     />
   );
 }

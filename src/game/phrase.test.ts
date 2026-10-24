@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { KEY_ROWS, letterFromKey } from "./alphabet";
 import {
   deal,
   describeShape,
@@ -46,6 +47,17 @@ describe("tokenize", () => {
         { kind: "letter", value: "I" },
         { kind: "letter", value: "S" },
         { kind: "letter", value: "T" },
+      ],
+    ]);
+  });
+
+  it("keeps digits and symbols visible and uppercases letters", () => {
+    expect(tokenize("A1-b")).toEqual([
+      [
+        { kind: "letter", value: "A" },
+        { kind: "mark", value: "1" },
+        { kind: "mark", value: "-" },
+        { kind: "letter", value: "B" },
       ],
     ]);
   });
@@ -116,5 +128,22 @@ describe("deal", () => {
     });
     expect(result.recycled).toBe(true);
     expect(result.phrase).toBe("Alien");
+  });
+
+  it("clamps a sample that is outside 0 to 1", () => {
+    const titles = [entry("Alien"), entry("Jaws")];
+    expect(deal(catalog(titles), "Movies", { random: () => 99 }).phrase).toBe("Jaws");
+    expect(deal(catalog(titles), "Movies", { random: () => Number.NaN }).phrase).toBe("Alien");
+    expect(deal(catalog(titles), "Movies", { random: () => -4 }).phrase).toBe("Alien");
+  });
+});
+
+describe("alphabet", () => {
+  it("is the 26 keys, and keyboard input normalizes to one of them", () => {
+    const letters = KEY_ROWS.flat();
+    expect(new Set(letters).size).toBe(26);
+    expect(letterFromKey("q")).toBe("Q");
+    expect(letterFromKey("Enter")).toBeNull();
+    expect(letterFromKey("1")).toBeNull();
   });
 });

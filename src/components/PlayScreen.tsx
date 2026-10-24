@@ -1,14 +1,13 @@
-import type { CSSProperties } from "react";
 import heart from "../assets/images/icon-heart.svg";
 import menuIcon from "../assets/images/icon-menu.svg";
+import { KEY_ROWS } from "../game/alphabet";
 import { longestWordLength, speakPuzzle, tokenize } from "../game/phrase";
 import type { CategoryName, Overlay } from "../game/types";
 import { MAX_LIVES } from "../game/types";
 import { IconButton } from "./Buttons";
+import { classNames } from "./classNames";
 import { useFocusHeading } from "./useFocusHeading";
 import styles from "./PlayScreen.module.css";
-
-const ROWS = ["ABCDEFGHI", "JKLMNOPQR", "STUVWXYZ"];
 
 type PlayScreenProps = {
   category: CategoryName;
@@ -17,6 +16,7 @@ type PlayScreenProps = {
   misses: number;
   overlay: Overlay;
   note: string | null;
+  round: number;
   onPause: () => void;
   onGuess: (letter: string) => void;
 };
@@ -28,10 +28,11 @@ export function PlayScreen({
   misses,
   overlay,
   note,
+  round,
   onPause,
   onGuess,
 }: PlayScreenProps) {
-  const headingRef = useFocusHeading<HTMLHeadingElement>(phrase);
+  const headingRef = useFocusHeading<HTMLHeadingElement>(round);
   const lives = MAX_LIVES - misses;
   const words = tokenize(phrase);
   const revealMisses = overlay === "lost";
@@ -78,13 +79,14 @@ export function PlayScreen({
 
       <div className={styles.stage}>
         <div className={styles.fit}>
-        <div
-          className={styles.board}
-          role="group"
-          aria-label={`Puzzle. ${puzzle}`}
-          style={{ "--letters": longestWordLength(phrase) } as CSSProperties}
-          {...(import.meta.env.DEV ? { "data-phrase": phrase } : {})}
-        >
+          <div
+            key={round}
+            className={styles.board}
+            role="group"
+            aria-label={`Puzzle. ${puzzle}`}
+            style={{ "--letters": longestWordLength(phrase) }}
+            {...(import.meta.env.DEV ? { "data-phrase": phrase } : {})}
+          >
           {words.map((word, wordIndex) => (
             <div className={styles.word} key={`${phrase}-${wordIndex}`}>
               {word.map((token, tokenIndex) => {
@@ -97,13 +99,11 @@ export function PlayScreen({
                 }
                 const revealed = guessed.has(token.value);
                 const missed = revealMisses && !revealed;
-                const className = [
+                const className = classNames(
                   styles.tile,
-                  revealed ? styles.revealed : "",
-                  missed ? styles.missed : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ");
+                  revealed && styles.revealed,
+                  missed && styles.missed,
+                );
                 return (
                   <span className={className} key={`${token.value}-${tokenIndex}`} aria-hidden="true">
                     {revealed || missed ? token.value : ""}
@@ -112,14 +112,14 @@ export function PlayScreen({
               })}
             </div>
           ))}
-        </div>
+          </div>
         </div>
       </div>
 
       <div className={styles.keyboard} role="group" aria-label="Letter keys">
-        {ROWS.map((row) => (
-          <div className={styles.row} key={row}>
-            {row.split("").map((letter) => {
+        {KEY_ROWS.map((row) => (
+          <div className={styles.row} key={row[0]}>
+            {row.map((letter) => {
               const used = guessed.has(letter);
               return (
                 <button

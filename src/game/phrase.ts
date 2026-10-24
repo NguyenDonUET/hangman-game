@@ -1,34 +1,30 @@
-import type { Catalog, CategoryName } from "./types";
+import { isLetter, type Letter } from "./alphabet";
+import type { Catalog, CategoryName, Entry } from "./types";
 
 export type Token =
-  | { kind: "letter"; value: string }
+  | { kind: "letter"; value: Letter }
   | { kind: "mark"; value: string };
 
 export type Word = Token[];
 
-const LETTER = /^[A-Za-z]$/;
+function tokenFor(char: string): Token {
+  const value = char.toUpperCase();
+  if (isLetter(value)) return { kind: "letter", value };
+  return { kind: "mark", value: char };
+}
 
 export function tokenize(phrase: string): Word[] {
   return phrase
     .split(" ")
     .filter((word) => word.length > 0)
-    .map((word) => {
-      const tokens: Token[] = [];
-      for (const char of word) {
-        if (LETTER.test(char)) {
-          tokens.push({ kind: "letter", value: char.toUpperCase() });
-        } else {
-          tokens.push({ kind: "mark", value: char });
-        }
-      }
-      return tokens;
-    });
+    .map((word) => [...word].map(tokenFor));
 }
 
-export function lettersIn(phrase: string): Set<string> {
-  const letters = new Set<string>();
+export function lettersIn(phrase: string): Set<Letter> {
+  const letters = new Set<Letter>();
   for (const char of phrase) {
-    if (LETTER.test(char)) letters.add(char.toUpperCase());
+    const value = char.toUpperCase();
+    if (isLetter(value)) letters.add(value);
   }
   return letters;
 }
@@ -51,11 +47,11 @@ export function describeShape(phrase: string): string {
   const counts = tokenize(phrase).map(
     (word) => word.filter((token) => token.kind === "letter").length,
   );
-  if (counts.length === 0) return "No letters.";
+  const last = counts.at(-1);
+  if (last === undefined) return "No letters.";
   if (counts.length === 1) {
-    return `1 word, ${counts[0]} ${counts[0] === 1 ? "letter" : "letters"}.`;
+    return `1 word, ${last} ${last === 1 ? "letter" : "letters"}.`;
   }
-  const last = counts[counts.length - 1];
   const rest = counts.slice(0, -1).join(", ");
   return `${counts.length} words, ${rest} and ${last} letters.`;
 }
@@ -97,19 +93,19 @@ export type DealResult = {
 export function deal(
   catalog: Catalog,
   category: CategoryName,
-  options?: { random?: () => number; avoid?: string },
+  options?: { readonly random?: () => number; readonly avoid?: string },
 ): DealResult {
   const random = options?.random ?? Math.random;
   const avoid = options?.avoid;
-  let entries = catalog[category];
+  let entries: readonly Entry[] = catalog[category];
   let recycled = false;
-  let pool = entries.filter((entry) => !entry.selected);
+  let pool: readonly Entry[] = entries.filter((entry) => !entry.selected);
 
   if (pool.length === 0) {
     recycled = true;
     entries = entries.map((entry) => ({
       ...entry,
-      selected: avoid != null && entry.name === avoid,
+      selected: avoid !== undefined && entry.name === avoid,
     }));
     pool = entries.filter((entry) => !entry.selected);
     if (pool.length === 0) {
@@ -118,8 +114,10 @@ export function deal(
     }
   }
 
-  const index = Math.min(pool.length - 1, Math.floor(random() * pool.length));
-  const chosen = pool[index];
+  const sample = random();
+  const ratio = Number.isFinite(sample) && sample > 0 ? sample : 0;
+  const index = Math.min(pool.length - 1, Math.max(0, Math.floor(ratio * pool.length)));
+  const chosen = pool.at(index);
   if (!chosen) throw new Error(`No titles in ${category}`);
 
   const updated = entries.map((entry) =>

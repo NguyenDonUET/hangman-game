@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import type { Overlay } from "../game/types";
 import { TextButton } from "./Buttons";
 import styles from "./GameDialog.module.css";
@@ -27,11 +27,17 @@ export function GameDialog({
   onQuit,
 }: GameDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const primaryRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  const detailId = useId();
+  const answered = mode === "won" || mode === "lost";
 
+  // App keys this dialog by mode, so each overlay mounts its own instance.
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
+    primaryRef.current?.focus();
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -40,14 +46,12 @@ export function GameDialog({
     };
   }, []);
 
-  const answered = mode === "won" || mode === "lost";
-
   return (
     <dialog
       ref={dialogRef}
       className={styles.modal}
-      aria-labelledby="result-title"
-      aria-describedby={answered ? "result-detail" : undefined}
+      aria-labelledby={titleId}
+      aria-describedby={answered ? detailId : undefined}
       onCancel={(event) => {
         event.preventDefault();
         if (mode === "paused") onResume();
@@ -57,24 +61,24 @@ export function GameDialog({
       }}
     >
       <div className={styles.stack}>
-        <h2 className="display" id="result-title">
+        <h2 className="display" id={titleId}>
           <span className="stroke" aria-hidden="true">
             {TITLES[mode]}
           </span>
           <span className="fill">{TITLES[mode]}</span>
         </h2>
         {answered ? (
-          <p className={styles.answer} id="result-detail">
+          <p className={styles.answer} id={detailId}>
             {mode === "won" ? "You got it." : `The answer was ${phrase}.`}
           </p>
         ) : null}
         <div className={styles.actions}>
           {mode === "paused" ? (
-            <TextButton variant="pink" onClick={onResume}>
+            <TextButton ref={primaryRef} variant="pink" onClick={onResume}>
               Continue
             </TextButton>
           ) : (
-            <TextButton variant="pink" onClick={onPlayAgain}>
+            <TextButton ref={primaryRef} variant="pink" onClick={onPlayAgain}>
               Play again!
             </TextButton>
           )}

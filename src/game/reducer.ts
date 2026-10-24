@@ -1,9 +1,15 @@
 import raw from "../data/categories.json";
-import { lettersIn, isSolved } from "./phrase";
-import type { Catalog, State, Action } from "./types";
-import { MAX_LIVES } from "./types";
+import { letterFromKey } from "./alphabet";
+import { parseCatalog } from "./catalog";
+import { deal, isSolved, lettersIn, openingStatus } from "./phrase";
+import { MAX_LIVES, type Action, type Catalog, type CategoryName, type State } from "./types";
 
-const source = raw.categories as Catalog;
+let source: Catalog | null = null;
+
+function sourceCatalog(): Catalog {
+  source ??= parseCatalog(raw);
+  return source;
+}
 
 export function createInitialState(): State {
   return {
@@ -13,7 +19,22 @@ export function createInitialState(): State {
     phrase: null,
     guessed: new Set(),
     misses: 0,
-    catalog: structuredClone(source),
+    round: 0,
+    catalog: structuredClone(sourceCatalog()),
+    status: "",
+    note: null,
+  };
+}
+
+function atMenu(state: State): State {
+  return {
+    ...state,
+    screen: "menu",
+    overlay: null,
+    category: null,
+    phrase: null,
+    guessed: new Set(),
+    misses: 0,
     status: "",
     note: null,
   };
@@ -23,36 +44,55 @@ function idle(state: State, screen: State["screen"]): State {
   return { ...state, screen, overlay: null, status: "", note: null };
 }
 
+function countLabel(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count === 1 ? singular : pluralForm}`;
+}
+
+function beginRound(state: State, category: CategoryName, avoid: string | null, pick: number): State {
+  const random = () => pick;
+  const result = deal(
+    state.catalog,
+    category,
+    avoid === null ? { random } : { random, avoid },
+  );
+  return {
+    ...state,
+    screen: "play",
+    overlay: null,
+    category,
+    phrase: result.phrase,
+    catalog: result.catalog,
+    guessed: new Set(),
+    misses: 0,
+    round: state.round + 1,
+    status: openingStatus(category, result.phrase, result.recycled),
+    note: result.recycled ? `Every ${category} title has been played. Starting over.` : null,
+  };
+}
+
+function assertNever(action: never): never {
+  throw new Error(`Unexpected action: ${JSON.stringify(action)}`);
+}
+
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "show-menu":
-    case "quit": {
-      if (action.type === "show-menu") return idle(state, "menu");
-      return {
-        ...idle(state, "menu"),
-        category: null,
-        phrase: null,
-        guessed: new Set(),
-        misses: 0,
-      };
-    }
+    case "quit":
+      return atMenu(state);
     case "show-how-to":
       return idle(state, "howTo");
     case "show-categories":
       return idle(state, "categories");
-    case "deal":
-      return {
-        ...state,
-        screen: "play",
-        overlay: null,
-        category: action.category,
-        phrase: action.phrase,
-        catalog: action.catalog,
-        guessed: new Set(),
-        misses: 0,
-        status: action.status,
-        note: action.note,
-      };
+    case "start": {
+      if (state.screen !== "categories") return state;
+      return beginRound(state, action.category, null, action.pick);
+    }
+    case "play-again": {
+      if ((state.overlay !== "won" && state.overlay !== "lost") || !state.category || !state.phrase) {
+        return state;
+      }
+      return beginRound(state, state.category, state.phrase, action.pick);
+    }
     case "pause":
       if (state.screen !== "play" || state.overlay || !state.phrase) return state;
       return { ...state, overlay: "paused" };
@@ -61,8 +101,8 @@ export function reducer(state: State, action: Action): State {
       return { ...state, overlay: null };
     case "guess": {
       if (state.screen !== "play" || state.overlay || !state.phrase) return state;
-      const letter = action.letter.toUpperCase();
-      if (!/^[A-Z]$/.test(letter) || state.guessed.has(letter)) return state;
+      const letter = letterFromKey(action.letter);
+      if (!letter || state.guessed.has(letter)) return state;
 
       const guessed = new Set(state.guessed);
       guessed.add(letter);
@@ -72,14 +112,7 @@ export function reducer(state: State, action: Action): State {
       const lost = misses >= MAX_LIVES;
 
       if (solved) {
-        return {
-          ...state,
-          guessed,
-          misses,
-          overlay: "won",
-          note: null,
-          status: "You win.",
-        };
+        return { ...state, guessed, misses, overlay: "won", note: null, status: "You win." };
       }
       if (lost) {
         return {
@@ -98,7 +131,7 @@ export function reducer(state: State, action: Action): State {
           guessed,
           misses,
           note: null,
-          status: `${letter}, correct. ${remaining} ${remaining === 1 ? "letter" : "letters"} left.`,
+          status: `${letter}, correct. ${countLabel(remaining, "letter", "letters")} left.`,
         };
       }
       const lives = MAX_LIVES - misses;
@@ -107,8 +140,10 @@ export function reducer(state: State, action: Action): State {
         guessed,
         misses,
         note: null,
-        status: `${letter}, wrong. ${lives} ${lives === 1 ? "life" : "lives"} left.`,
+        status: `${letter}, wrong. ${countLabel(lives, "life", "lives")} left.`,
       };
     }
+    default:
+      return assertNever(action);
   }
 }

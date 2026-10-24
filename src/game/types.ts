@@ -10,11 +10,13 @@ export const CATEGORIES = [
 export type CategoryName = (typeof CATEGORIES)[number];
 
 export type Entry = {
-  name: string;
-  selected: boolean;
+  readonly name: string;
+  readonly selected: boolean;
 };
 
-export type Catalog = Record<CategoryName, Entry[]>;
+export type Catalog = {
+  readonly [Key in CategoryName]: readonly Entry[];
+};
 
 export type Screen = "menu" | "howTo" | "categories" | "play";
 
@@ -29,15 +31,8 @@ export type State = {
   phrase: string | null;
   guessed: ReadonlySet<string>;
   misses: number;
-  catalog: Catalog;
-  status: string;
-  note: string | null;
-};
-
-export type DealAction = {
-  type: "deal";
-  category: CategoryName;
-  phrase: string;
+  /** Identity of the current deal. A repeated title still gets a new round. */
+  round: number;
   catalog: Catalog;
   status: string;
   note: string | null;
@@ -47,7 +42,8 @@ export type Action =
   | { type: "show-menu" }
   | { type: "show-how-to" }
   | { type: "show-categories" }
-  | DealAction
+  | { type: "start"; category: CategoryName; pick: number }
+  | { type: "play-again"; pick: number }
   | { type: "guess"; letter: string }
   | { type: "pause" }
   | { type: "resume" }
