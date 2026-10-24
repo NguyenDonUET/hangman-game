@@ -137,7 +137,7 @@ test.describe("pause menu", () => {
 
   test("quit returns to the menu", async ({ page }) => {
     await page.getByRole("button", { name: "Quit game" }).click();
-    await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
     await expect(page.getByRole("dialog")).toBeHidden();
   });
 });

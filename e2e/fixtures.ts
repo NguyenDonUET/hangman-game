@@ -43,7 +43,7 @@ export async function guessAll(page: Page, letters: readonly string[]) {
 
 export async function startRound(page: Page, category: CategoryName) {
   await page.goto("/");
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: category, exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: category })).toBeFocused();
 }
