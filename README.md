@@ -23,6 +23,7 @@ The whole game can be played with a keyboard. Focus moves to each screen heading
 - [Vite](https://vite.dev/) for development and production builds
 - CSS Modules for screen layout
 - [Vitest](https://vitest.dev/) for the phrase and reducer tests
+- [Playwright](https://playwright.dev/) for end-to-end tests on desktop and mobile viewports
 
 ## Run it locally
 
@@ -37,6 +38,7 @@ pnpm dev
 | --- | --- |
 | `pnpm dev` | Start the dev server |
 | `pnpm test` | Run the game-logic tests |
+| `pnpm test:e2e` | Build, serve, and run the Playwright tests (run `pnpm exec playwright install chromium` once first) |
 | `pnpm build` | Typecheck and build to `dist` |
 | `pnpm preview` | Serve the production build locally |
 
