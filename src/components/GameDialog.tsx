@@ -56,6 +56,17 @@ export function GameDialog({
         event.preventDefault();
         if (mode === "paused") onResume();
       }}
+      // Browsers may force-close the modal on repeated Escape even when cancel is prevented.
+      onClose={(event) => {
+        const dialog = event.currentTarget;
+        if (!dialog.isConnected) return;
+        if (mode === "paused") {
+          onResume();
+          return;
+        }
+        dialog.showModal();
+        primaryRef.current?.focus();
+      }}
       onClick={(event) => {
         if (event.target === event.currentTarget && mode === "paused") onResume();
       }}
