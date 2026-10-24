@@ -84,7 +84,8 @@ button:focus-visible,
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: var(--night) url("../assets/images/background-mobile.svg") center / cover no-repeat;
+  background: var(--night) url("../assets/images/background-mobile.svg")
+    center / cover no-repeat;
 }
 
 @media (min-width: 768px) {
